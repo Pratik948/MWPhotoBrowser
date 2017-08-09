@@ -17,6 +17,7 @@
 @property (nonatomic) id <MWPhoto> photo;
 @property (nonatomic) BOOL selectionMode;
 @property (nonatomic) BOOL isSelected;
+@property (nonatomic) UIImageView *imageView;
 
 - (void)displayImage;
 
