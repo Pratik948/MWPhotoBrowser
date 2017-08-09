@@ -157,8 +157,8 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 	_pagingScrollView.showsVerticalScrollIndicator = NO;
 	_pagingScrollView.backgroundColor = [UIColor blackColor];
     _pagingScrollView.contentSize = [self contentSizeForPagingScrollView];
-	[self.view addSubview:_pagingScrollView];
-	
+    [self.view addSubview:_pagingScrollView];
+    
     // Toolbar
     _toolbar = [[UIToolbar alloc] initWithFrame:[self frameForToolbarAtOrientation:self.interfaceOrientation]];
     _toolbar.tintColor = [UIColor whiteColor];
@@ -189,10 +189,8 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
         swipeGesture.direction = UISwipeGestureRecognizerDirectionDown | UISwipeGestureRecognizerDirectionUp;
         [self.view addGestureRecognizer:swipeGesture];
     }
-    
 	// Super
     [super viewDidLoad];
-	
 }
 
 - (void)performLayout {
@@ -292,7 +290,6 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 	_pagingScrollView.contentOffset = [self contentOffsetForPageAtIndex:_currentPageIndex];
     [self tilePages];
     _performingLayout = NO;
-    
 }
 
 // Release any retained subviews of the main view.
@@ -321,7 +318,8 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
         }
     }
     if (presenting) {
-        return [presenting prefersStatusBarHidden];
+//        return [presenting prefersStatusBarHidden];
+        return NO;
     } else {
         return NO;
     }
@@ -354,6 +352,11 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
     }
     [self setNavBarAppearance:animated];
     
+    if ([self.delegate respondsToSelector:@selector(rightBarButtonItemsForPhotoBrowser:)]) {
+        NSMutableArray *arrButtons = [self.delegate rightBarButtonItemsForPhotoBrowser:self];
+        [self.navigationItem setRightBarButtonItems:arrButtons animated:YES];
+    }
+    
     // Update UI
 	[self hideControlsAfterDelay];
     
@@ -378,7 +381,7 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 - (void)viewDidAppear:(BOOL)animated {
     [super viewDidAppear:animated];
     _viewIsActive = YES;
-    
+    self.navigationController.navigationBar.translucent=YES;
     // Autoplay if first is video
     if (!_viewHasAppearedInitially) {
         if (_autoPlayOnAppear) {
@@ -388,9 +391,7 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
             }
         }
     }
-    
     _viewHasAppearedInitially = YES;
-        
 }
 
 - (void)viewWillDisappear:(BOOL)animated {
@@ -1083,7 +1084,7 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
     NSUInteger numberOfPhotos = [self numberOfPhotos];
     if (_gridController) {
         if (_gridController.selectionMode) {
-            self.title = NSLocalizedString(@"Select Photos", nil);
+            self.title = NSLocalizedString(@"Pick Image", nil);
         } else {
             NSString *photosText;
             if (numberOfPhotos == 1) {
@@ -1173,7 +1174,8 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
     NSUInteger index = [self indexForPlayButton:sender];
     if (index != NSUIntegerMax) {
         if (!_currentVideoPlayerViewController) {
-            [self playVideoAtIndex:index];
+            [self performSelector:@selector(didTapOnPlayButton)];
+//            [self playVideoAtIndex:index];
         }
     }
 }
@@ -1338,7 +1340,7 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
     } else {
         _gridPreviousRightNavItem = nil;
     }
-    
+  
     // Update
     [self updateNavigation];
     [self setControlsHidden:NO animated:YES permanent:YES];
@@ -1521,10 +1523,10 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 
 // Enable/disable control visiblity timer
 - (void)hideControlsAfterDelay {
-	if (![self areControlsHidden]) {
-        [self cancelControlHiding];
-		_controlVisibilityTimer = [NSTimer scheduledTimerWithTimeInterval:self.delayToHideElements target:self selector:@selector(hideControls) userInfo:nil repeats:NO];
-	}
+//	if (![self areControlsHidden]) {
+//        [self cancelControlHiding];
+//		_controlVisibilityTimer = [NSTimer scheduledTimerWithTimeInterval:self.delayToHideElements target:self selector:@selector(hideControls) userInfo:nil repeats:NO];
+//	}
 }
 
 - (BOOL)areControlsHidden { return (_toolbar.alpha == 0); }
@@ -1664,6 +1666,14 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
         [self.progressHUD hide:YES];
     }
     self.navigationController.navigationBar.userInteractionEnabled = YES;
+}
+
+#pragma mark - Customization
+
+- (void) didTapOnPlayButton {
+    if(self.delegate && [self.delegate respondsToSelector:@selector(photoBrowser:didTapPlayButtonAtPhotoIndex:)]) {
+        [self.delegate photoBrowser:self didTapPlayButtonAtPhotoIndex:self.currentIndex];
+    }
 }
 
 @end
