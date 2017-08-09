@@ -61,6 +61,7 @@
     [self.collectionView registerClass:[MWGridCell class] forCellWithReuseIdentifier:@"GridCell"];
     self.collectionView.alwaysBounceVertical = YES;
     self.collectionView.backgroundColor = [UIColor blackColor];
+    
 }
 
 - (void)viewWillDisappear:(BOOL)animated {
@@ -168,12 +169,47 @@
     } else {
         [photo loadUnderlyingImageAndNotify];
     }
+    if ([_browser.delegate respondsToSelector:@selector(photoBrowser:isPhotoSelectedAtIndex:)]) {
+        BOOL isSelected=[_browser.delegate photoBrowser:_browser isPhotoSelectedAtIndex:cell.index];
+        if (isSelected) {
+            cell.imageView.layer.borderColor=[[UIColor greenColor] CGColor];
+            cell.imageView.layer.borderWidth=1;
+        }
+        else {
+            cell.imageView.layer.borderWidth=0;
+        }
+    }
     return cell;
 }
 
 - (void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
-    [_browser setCurrentPhotoIndex:indexPath.row];
-    [_browser hideGrid];
+    MWGridCell *cell=[collectionView cellForItemAtIndexPath:indexPath];
+    if (_selectionMode) {
+        BOOL shouldSelect;
+        BOOL isSelected;
+        if ([_browser.delegate respondsToSelector:@selector(photoBrowser:isPhotoSelectedAtIndex:)]) {
+            isSelected=[_browser.delegate photoBrowser:_browser isPhotoSelectedAtIndex:cell.index];
+        }
+        if ([_browser.delegate respondsToSelector:@selector(shouldSelectPhotoAtIndex:)]) {
+            shouldSelect=[_browser.delegate shouldSelectPhotoAtIndex:cell.index];
+        }
+        if (!shouldSelect&&!isSelected) {
+            return;
+        }
+        if (!isSelected) {
+            cell.imageView.layer.borderColor=[[UIColor greenColor] CGColor];
+            cell.imageView.layer.borderWidth=1;
+            [_browser setPhotoSelected:YES atIndex:cell.index];
+        }
+        else {
+            cell.imageView.layer.borderWidth=0;
+            [_browser setPhotoSelected:NO atIndex:cell.index];
+        }
+    }
+    else {
+        [_browser setCurrentPhotoIndex:indexPath.row];
+        [_browser hideGrid];
+    }
 }
 
 - (void)collectionView:(UICollectionView *)collectionView didEndDisplayingCell:(UICollectionViewCell *)cell forItemAtIndexPath:(NSIndexPath *)indexPath {
